@@ -1,21 +1,21 @@
 from fastapi import APIRouter, Depends
 
 from app.models.chat import ChatRequest
-from app.core.dependencies import get_llm_service
-from app.services.llm import LLMService
+from app.models.agent import AgentRequest
+from app.core.dependencies import get_assistant_agent
+from app.agents.assistant import AssistantAgent
 
 router = APIRouter(
     prefix = "/api/chat",
     tags = ["chat"]
 )
 
-@router.post("/")
+@router.post("")
 async def chat(
     request: ChatRequest,
-    llm: LLMService = Depends(get_llm_service)):
+    assistant: AssistantAgent = Depends(get_assistant_agent)):
 
-    response = await llm.chat(request.message)
+    agent_request = AgentRequest(message = request.message)
+    response = await assistant.run(agent_request)
 
-    return {
-        "response": response
-    }
+    return response

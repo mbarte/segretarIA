@@ -8,15 +8,10 @@ class LLMService:
             host = settings.ollama_host
         )
     
-    async def chat(self, message:str)-> str: #ollama fa una chiamata HTTP sincrona, predisposizione futura (TODO)
+    async def chat(self, messages:list[dict])-> str: #ollama fa una chiamata HTTP sincrona, async predisposizione futura 
         response = self.client.chat(
             model = settings.ollama_model,
-            messages = [
-                {
-                    "role": "user",
-                    "content": message
-                }
-            ],
+            messages = messages,
             keep_alive = settings.ollama_keep_alive
         )
 

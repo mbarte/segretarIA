@@ -2,18 +2,25 @@ from fastapi import FastAPI
 
 from app.core.config import settings
 from app.core.logging import setup_logging
-from app.api.routes.chat import router as chat_router
+from app.api.router import api_router
+from app.database.engine import Base, engine
+from app.database import models
 
 def create_app() -> FastAPI:
 
     setup_logging()
+    
+    Base.metadata.create_all(
+        bind=engine
+    ) #controlla il db e crea tabelle inesistenti
 
     app = FastAPI(
         title = settings.app_name,
         version = settings.app_version
     )
 
-    app.include_router(chat_router)
+    app.include_router(api_router)
+    
 
     @app.get("/")
     async def root():

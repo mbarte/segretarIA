@@ -1,12 +1,22 @@
+from functools import lru_cache
+
 from app.services.llm import LLMService
+from app.agents.assistant import AssistantAgent
+from app.prompts.builder import PromptBuilder
 
-_llm_service = None
 
+@lru_cache #sostituisce global _llm_service if _llm_service is None
 def get_llm_service() -> LLMService:
+    return LLMService()
 
-    global _llm_service
+@lru_cache
+def get_prompt_builder() -> PromptBuilder:
+    return PromptBuilder()
 
-    if _llm_service is None:
-        _llm_service = LLMService()
+@lru_cache
+def get_assistant_agent() -> AssistantAgent:
     
-    return _llm_service
+    return AssistantAgent(
+        llm = get_llm_service(),
+        prompt_builder= get_prompt_builder()
+    )
