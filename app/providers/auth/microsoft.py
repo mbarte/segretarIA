@@ -1,3 +1,6 @@
+import time
+
+import jwt
 from msal import PublicClientApplication
 
 from .base import AuthenticationProvider
@@ -5,21 +8,18 @@ from .token_cache import TokenCache
 
 class MicrosoftAuthenticator(AuthenticationProvider):
 
-    SCOPES = [
-        "https://outlook.office.com/IMAP.AccessAsUser.All"
-    ]
 
     def __init__(
         self,
         client_id: str,
         tenant_id: str,
-        redirect_uri: str,
+        scopes: list[str],
         token_cache: TokenCache
     ):
 
         self.client_id = client_id
         self.tenant_id = tenant_id
-        self.redirect_uri = redirect_uri
+        self.scopes = scopes
 
         self.token_cache = token_cache
 
@@ -34,7 +34,7 @@ class MicrosoftAuthenticator(AuthenticationProvider):
     def login(self):
 
         flow = self.app.initiate_device_flow(
-            scopes=self.SCOPES
+            scopes=self.scopes
         )
 
         if "user_code" not in flow:
@@ -46,6 +46,10 @@ class MicrosoftAuthenticator(AuthenticationProvider):
 
         result = self.app.acquire_token_by_device_flow(flow)
 
+        if "access_token" not in result:
+            raise RuntimeError(result)
+
+
         self.token_cache.save()
 
         return result
@@ -56,14 +60,21 @@ class MicrosoftAuthenticator(AuthenticationProvider):
         if accounts:
 
             result = self.app.acquire_token_silent(
-                scopes = self.SCOPES,
+                scopes = self.scopes,
                 account = accounts[0]
             )
 
             if result and "access_token" in result:
-                self.token_cache.save()
-
-                return result["access_token"]
+                try:
+                    payload = jwt.decode(
+                        result["access_token"],
+                        options={"verify_signature": False}
+                    )
+                    if payload.get("exp", 0) > time.time():
+                        self.token_cache.save()
+                        return result["access_token"]
+                except Exception:
+                    pass
 
         result = self.login()
 
@@ -84,7 +95,7 @@ class MicrosoftAuthenticator(AuthenticationProvider):
         accounts = self.app.get_accounts()
 
         result = self.app.acquire_token_silent(
-            scopes=self.SCOPES,
+            scopes=self.scopes,
             account=accounts[0]
         )
 

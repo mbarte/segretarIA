@@ -11,7 +11,7 @@ class EmailAttachment:
 @dataclass(slots=True)
 class Email:
 
-    uid: str
+    uid: str | None
     message_id: str
 
     subject: str

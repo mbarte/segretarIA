@@ -1,6 +1,6 @@
 from typing import List
 from app.domain.email import Email
-from app.providers.email import EmailProvider
+from app.providers.base import EmailProvider
 
 class EmailService:
 

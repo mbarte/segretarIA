@@ -16,6 +16,9 @@ class Settings(BaseSettings):
 
     email_address: str
 
+    azure_tenant_id: str
+    azure_client_id: str
+
     class Config:
         env_file= ".env"
 

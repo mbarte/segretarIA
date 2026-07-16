@@ -11,12 +11,14 @@ from app.providers.auth.base import AuthenticationProvider
 
 class IMAPProvider(EmailProvider):
 
+    SCOPES = ["https://outlook.office.com/IMAP.AccessAsUser.All"]
+
     def __init__(
         self,
         server: str,
         port: int,
         username: str,
-        authenticator
+        authenticator: AuthenticationProvider
     ):
         self.server = server
         self.port = port
@@ -92,7 +94,6 @@ class IMAPProvider(EmailProvider):
         for uid in messages[0].split():
 
             status, data = mail.fetch(
-                "fetch",
                 uid,
                 "(RFC822)"
             )
@@ -153,6 +154,8 @@ class IMAPProvider(EmailProvider):
                 msg.get("Date")
             ),
             is_read=False,
+            recipients=[],
+            has_attachments=False,
             attachments=[]
         )
 
