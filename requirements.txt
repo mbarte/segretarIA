@@ -6,3 +6,5 @@ ollama
 python-dotenv
 
 sqlalchemy
+
+msal

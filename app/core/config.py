@@ -10,7 +10,13 @@ class Settings(BaseSettings):
     ollama_model: str
     ollama_keep_alive: str
 
+    email_provider: str = "imap"
+    imap_server: str
+    imap_port: int = 993
+
+    email_address: str
+
     class Config:
-        env_file= ".emv"
+        env_file= ".env"
 
 settings= Settings()

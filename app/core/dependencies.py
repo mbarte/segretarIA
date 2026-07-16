@@ -20,3 +20,18 @@ def get_assistant_agent() -> AssistantAgent:
         llm = get_llm_service(),
         prompt_builder= get_prompt_builder()
     )
+
+@lru_cache
+def get_email_provider():
+
+    if settings.email_provider == "imap":
+        return IMAPProvider(
+            server=settings.imap_server,
+            port=settings.imap_port,
+            username=settings.email_username,
+            password=settings.email_password
+        )
+    
+    raise ValueError(
+        "Unsupported email provider"
+    )

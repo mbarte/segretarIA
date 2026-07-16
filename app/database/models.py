@@ -27,3 +27,23 @@ class Conversation(Base):
         DateTime,
         default=datetime.utcnow
     )
+
+class ProcessedEmails(Base):
+    
+    __tablename__ = "processed_emails"
+
+    id = Column(
+        Integer,
+        primary_key=True
+    )
+
+    uid = Column(
+        String,
+        unique=True,
+        nullable=False
+    )
+
+    processed_at = Column(
+        DateTime,
+        default=datetime.utcnow
+    )
