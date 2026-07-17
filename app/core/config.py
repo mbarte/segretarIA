@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     azure_tenant_id: str
     azure_client_id: str
 
+    email_initial_sync_months: int = 6
     class Config:
         env_file= ".env"
 

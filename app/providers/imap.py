@@ -1,5 +1,6 @@
 import imaplib
 import email
+from datetime import datetime
 from email.header import decode_header
 from datetime import datetime
 from typing import List
@@ -57,6 +58,21 @@ class IMAPProvider(EmailProvider):
 
 
     def fetch_unread(self) -> List[Email]:
+        return self._fetch("UNSEEN")
+
+    
+    def fetch_since(
+        self,
+        since: datetime
+    ) -> List[Email]:
+
+        criteria = since.strftime("%d-%b-%Y")
+
+        return self._fetch(
+            f'(SINCE "{criteria}")'
+        )
+
+    def _fetch(self, search_criteria: str) -> List[Email]:
 
         emails = []
 
@@ -84,7 +100,7 @@ class IMAPProvider(EmailProvider):
         status, messages = mail.uid(
             "search",
             None,
-            "UNSEEN"
+            search_criteria
         )
 
         if status != "OK":

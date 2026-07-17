@@ -1,3 +1,8 @@
+#Nella route del progetto:
+#sudo docker exec -it segretaria-api \
+#python -m app.tests.test_graph_oauth
+
+
 import jwt
 import httpx
 

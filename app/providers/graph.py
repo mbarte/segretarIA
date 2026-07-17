@@ -18,21 +18,63 @@ class GraphEmailProvider(EmailProvider):
     ):
 
         self.authenticator = authenticator
+    
+    def fetch_since( self) -> List[Email]:
+
+        messages = self.client.get(
+            "/me/messages",
+            params={
+                "$top": limit,
+                "$orderby": "receivedDateTime desc"
+            }
+        )
+
+        return [
+            self._map_message(message)
+            for message in messages
+        ]
 
 
-    def fetch_unread(self) -> list[Email]:
+    def fetch_unread(self) -> List[Email]:
 
-        
+        return self._fetch_messages(
+            {
+                "$filter": "isRead eq false",
+                "$top": 50
+            }
+        )
+
+
+    def fetch_since(
+        self,
+        since: datetime
+    ) -> List[Email]:
+
+        graph_date = (
+            since
+            .astimezone()
+            .strftime("%Y-%m-%dT%H:%M:%SZ")
+        )
+
+        return self._fetch_messages(
+            {
+                "$filter": f"receivedDateTime ge {graph_date}",
+                "$orderby": "receivedDateTime desc"
+            }
+        )
+
+    def _fetch_messages(
+        self,
+        extra_params: dict
+    ) -> List[Email]:
+
         token = self.authenticator.get_access_token()
 
         headers = {
             "Authorization": f"Bearer {token}"
         }
 
-
         params = {
-            "$filter": "isRead eq false",
-            "$top": 10,
             "$select": (
                 "id,"
                 "internetMessageId,"
@@ -46,6 +88,7 @@ class GraphEmailProvider(EmailProvider):
             )
         }
 
+        params.update(extra_params)
 
         response = httpx.get(
             f"{self.GRAPH_URL}/me/messages",
@@ -53,16 +96,9 @@ class GraphEmailProvider(EmailProvider):
             params=params
         )
 
-        if response.status_code != 200:
-            print("GRAPH ERROR")
-            print(response.status_code)
-            print(response.text)
-
         response.raise_for_status()
 
-
         data = response.json()
-
 
         return [
             self._map_email(item)
@@ -82,15 +118,16 @@ class GraphEmailProvider(EmailProvider):
             .get("address")
         )
 
-        recipients = []
-
-        for recipient in item.get("toRecipients", []):
-            recipients.append(
-                recipient["emailAddress"]["address"]
+        recipients = [
+            recipient["emailAddress"]["address"]
+            for recipient in item.get(
+                "toRecipients",
+                []
             )
+        ]
 
         return Email(
-            uid = None,
+            uid=None,
 
             message_id=(
                 item.get("internetMessageId")
@@ -103,16 +140,14 @@ class GraphEmailProvider(EmailProvider):
 
             recipients=recipients,
 
-            
             date=datetime.fromisoformat(
                 item["receivedDateTime"]
                 .replace("Z", "+00:00")
             ),
 
-            body=(
-                item
-                .get("body", {})
-                .get("content", "")
+            body=item.get("body", {}).get(
+                "content",
+                ""
             ),
 
             is_read=item.get(
@@ -127,3 +162,4 @@ class GraphEmailProvider(EmailProvider):
 
             attachments=[]
         )
+

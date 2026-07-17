@@ -1,3 +1,7 @@
+#Nella route del progetto:
+#sudo docker exec -it segretaria-api \
+#python -m app.tests.test_imap_oauth
+
 from app.core.config import settings
 from app.providers.imap import IMAPProvider
 from app.providers.auth.microsoft import MicrosoftAuthenticator
