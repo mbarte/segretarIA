@@ -1,5 +1,6 @@
 import httpx
 from datetime import datetime
+from typing import List
 
 from app.domain.email import Email
 from app.providers.base import EmailProvider
@@ -19,21 +20,6 @@ class GraphEmailProvider(EmailProvider):
 
         self.authenticator = authenticator
     
-    def fetch_since( self) -> List[Email]:
-
-        messages = self.client.get(
-            "/me/messages",
-            params={
-                "$top": limit,
-                "$orderby": "receivedDateTime desc"
-            }
-        )
-
-        return [
-            self._map_message(message)
-            for message in messages
-        ]
-
 
     def fetch_unread(self) -> List[Email]:
 

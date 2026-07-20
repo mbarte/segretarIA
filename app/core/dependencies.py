@@ -10,6 +10,12 @@ from app.providers.graph import GraphEmailProvider
 from app.providers.auth.microsoft import MicrosoftAuthenticator
 from app.providers.auth.token_cache import TokenCache
 
+from app.services.email import EmailService
+from app.services.database import DatabaseService
+
+from app.repositories.email import EmailRepository
+
+
 
 @lru_cache #sostituisce global _llm_service if _llm_service is None
 def get_llm_service() -> LLMService:
@@ -59,4 +65,23 @@ def get_email_provider():
 
     raise ValueError(
         "Unsupported email provider"
+    )
+
+@lru_cache
+def get_database_service()-> DatabaseService:
+    return DatabaseService()
+
+
+@lru_cache
+def get_email_repository() -> EmailRepository:
+    return EmailRepository(
+        database_service=get_database_service()
+    )
+
+
+@lru_cache
+def get_email_service() -> EmailService:
+    return EmailService(
+        provider=get_email_provider(),
+        repository=get_email_repository()
     )

@@ -1,6 +1,11 @@
-from dataclass import dataclass
+from dataclasses import dataclass
+from datetime import datetime, timedelta
 
 from typing import List
+import logging
+logger = logging.getLogger(__name__) 
+
+from app.core.config import settings
 from app.domain.email import Email
 from app.providers.base import EmailProvider
 from app.repositories.email import EmailRepository
@@ -22,18 +27,31 @@ class EmailService:
     def initialize(self) -> EmailSyncResult:
 
         since = datetime.now() - timedelta(
-                days=self.settings.email_initial_sync_months * 30
+                days=settings.email_initial_sync_months * 30
             )
 
         emails = self.provider.fetch_since(since)
+        
+        logger.info("Avvio inizializzazione mailbox")
+        result = self._save_emails(emails)
+        logger.info(
+            "Inizializzazione completata: fetched=%d, saved=%d, skipped=%d, errors=%d",
+            result.fetched, result.saved, result.skipped, result.errors
+        )
+        return result
 
-        return self._save_emails(emails)
 
     def sync(self)-> EmailSyncResult:
         
-        emails: List[Emails] = self.provider.fetch_unread()
+        emails: List[Email] = self.provider.fetch_unread()
 
-        return self._save_emails(emails)
+        logger.info("Avvio sync incrementale")
+        result = self._save_emails(emails)
+        logger.info(
+            "Sync completata: fetched=%d, saved=%d, skipped=%d, errors=%d",
+            result.fetched, result.saved, result.skipped, result.errors
+        )
+        return result
     
     def _save_emails(self, emails: List[Email]) -> EmailSyncResult:
 

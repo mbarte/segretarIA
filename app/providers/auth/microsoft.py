@@ -3,6 +3,10 @@ import time
 import jwt
 from msal import PublicClientApplication
 
+import logging
+logger = logging.getLogger(__name__)
+
+
 from .base import AuthenticationProvider
 from .token_cache import TokenCache
 
@@ -32,27 +36,32 @@ class MicrosoftAuthenticator(AuthenticationProvider):
         )
 
     def login(self):
-
-        flow = self.app.initiate_device_flow(
-            scopes=self.scopes
-        )
+        flow = self.app.initiate_device_flow(scopes=self.scopes)
 
         if "user_code" not in flow:
-            raise RuntimeError(
-                "Impossibile creare device flow"
-            )
+            raise RuntimeError("Impossibile creare device flow")
 
-        print(flow["message"])
+        logger.info(flow["message"])
 
-        result = self.app.acquire_token_by_device_flow(flow)
+        timeout = flow.get("expires_in", 900)
+        interval = flow.get("interval", 5)
+        elapsed = 0
 
-        if "access_token" not in result:
+        while elapsed < timeout:
+            result = self.app.acquire_token_by_device_flow(flow)
+
+            if "access_token" in result:
+                self.token_cache.save()
+                return result
+
+            if result.get("error") == "authorization_pending":
+                time.sleep(interval)
+                elapsed += interval
+                continue
+
             raise RuntimeError(result)
 
-
-        self.token_cache.save()
-
-        return result
+        raise RuntimeError("Device flow timeout")
 
     def get_access_token(self)-> str:
         accounts = self.app.get_accounts()

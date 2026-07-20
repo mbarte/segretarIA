@@ -1,7 +1,7 @@
 # Domain <-> Model mapping
 import json
 
-from app.domain.email import Email
+from app.domain.email import Email, EmailAttachment
 from app.database.models import EmailModel, AttachmentModel
 
 def email_to_model(email: Email) -> EmailModel:

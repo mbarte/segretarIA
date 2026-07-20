@@ -7,7 +7,7 @@ class TokenCache:
 
     def __init__(
         self,
-        path: str = "storage/msal_cache.bin"
+        path: str = "/storage/msal_cache.bin"
     ):
         self.path = Path(path)
 
